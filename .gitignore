@@ -1,0 +1,14 @@
+node_modules/
+__pycache__/
+*.pyc
+.env
+bin/
+obj/
+*.class
+.DS_Store
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.pdf
+!images/*
