@@ -34,10 +34,16 @@ $query = http_build_query([
 $response = call('GET', 'https://api.huntapi.com/v1/video/download' . ($query ? '?' . $query : ''));
 
 $jobId = json_decode($response, true)['job_id'];
-do {
-    sleep(5);
+$job = null;
+for ($i = 0; $i < 4320; $i++) { // give up after 12 hours
+    sleep(10);
     $job = json_decode(call('GET', 'https://api.huntapi.com/v1/jobs/' . $jobId . ''), true);
     echo $job['status'], ' ', $job['progress'] ?? '', PHP_EOL;
-} while (!in_array($job['status'], ['CompletedJob', 'Error', 'NotFound', 'BadRequest'], true));
+    if (in_array($job['status'], ['CompletedJob', 'Error', 'NotFound', 'BadRequest'], true)) break;
+}
 
 echo json_encode($job['result'] ?? null, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), PHP_EOL;
+if (($job['status'] ?? '') !== 'CompletedJob') {
+    fwrite(STDERR, "Job $jobId not completed: " . ($job['status'] ?? 'unknown') . "\n");
+    exit(1);
+}

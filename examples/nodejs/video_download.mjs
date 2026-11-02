@@ -17,10 +17,20 @@ if (!response.ok) {
 const { job_id: jobId } = await response.json();
 const done = new Set(["CompletedJob", "Error", "NotFound", "BadRequest"]);
 let job;
-do {
-  await new Promise((r) => setTimeout(r, 5000));
-  job = await (await fetch(`https://api.huntapi.com/v1/jobs/${jobId}`, { headers })).json();
+for (let i = 0; i < 4320; i++) { // give up after 12 hours
+  await new Promise((r) => setTimeout(r, 10000));
+  const poll = await fetch(`https://api.huntapi.com/v1/jobs/${jobId}`, { headers });
+  if (!poll.ok) {
+    console.error(`HTTP ${poll.status}: ${await poll.text()}`);
+    process.exit(1);
+  }
+  job = await poll.json();
   console.log(job.status, job.progress);
-} while (!done.has(job.status));
+  if (done.has(job.status)) break;
+}
 
-console.log(JSON.stringify(job.result, null, 2));
+console.log(JSON.stringify(job?.result, null, 2));
+if (job?.status !== "CompletedJob") {
+  console.error(`Job ${jobId} not completed: ${job?.status}`);
+  process.exit(1);
+}

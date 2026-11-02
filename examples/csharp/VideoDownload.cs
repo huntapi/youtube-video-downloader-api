@@ -19,13 +19,18 @@ if (!response.IsSuccessStatusCode)
 
 var jobId = JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement.GetProperty("job_id").GetString();
 var done = new HashSet<string> { "CompletedJob", "Error", "NotFound", "BadRequest" };
-JsonElement job;
-while (true)
+JsonElement job = default;
+var status = "";
+for (var i = 0; i < 4320 && !done.Contains(status); i++) // give up after 12 hours
 {
-    await Task.Delay(5000);
-    job = JsonDocument.Parse(await http.GetStringAsync($"https://api.huntapi.com/v1/jobs/{jobId}")).RootElement;
-    var status = job.GetProperty("status").GetString()!;
+    await Task.Delay(10000);
+    job = JsonDocument.Parse(await http.GetStringAsync($"https://api.huntapi.com/v1/jobs/{jobId}")).RootElement; // throws on HTTP errors
+    status = job.GetProperty("status").GetString()!;
     Console.WriteLine(status);
-    if (done.Contains(status)) break;
+}
+if (status != "CompletedJob")
+{
+    Console.Error.WriteLine($"Job {jobId} not completed: {status}");
+    Environment.Exit(1);
 }
 Console.WriteLine(job.GetProperty("result"));

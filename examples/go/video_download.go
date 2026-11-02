@@ -55,10 +55,11 @@ func main() {
 	json.Unmarshal(data, &submitted)
 	jobID := fmt.Sprint(submitted["job_id"])
 	var job map[string]any
-	for {
-		time.Sleep(5 * time.Second)
+	status := ""
+	for i := 0; i < 4320; i++ { // give up after 12 hours
+		time.Sleep(10 * time.Second)
 		json.Unmarshal(call("GET", "https://api.huntapi.com/v1/jobs/"+jobID+"", nil), &job)
-		status := fmt.Sprint(job["status"])
+		status = fmt.Sprint(job["status"])
 		fmt.Println(status, job["progress"])
 		if status == "CompletedJob" || status == "Error" || status == "NotFound" || status == "BadRequest" {
 			break
@@ -66,4 +67,8 @@ func main() {
 	}
 	out, _ := json.MarshalIndent(job["result"], "", "  ")
 	fmt.Println(string(out))
+	if status != "CompletedJob" {
+		fmt.Fprintf(os.Stderr, "job %s not completed: %s\n", jobID, status)
+		os.Exit(1)
+	}
 }

@@ -85,14 +85,20 @@ response.raise_for_status()
 
 job_id = response.json()["job_id"]
 
-# Poll the job until it reaches a final status
-while True:
-    job = requests.get(f"https://api.huntapi.com/v1/jobs/{job_id}", headers=HEADERS, timeout=60).json()
+# Poll the job until it reaches a final status (give up after 12 hours)
+for _ in range(4320):
+    time.sleep(10)
+    poll = requests.get(f"https://api.huntapi.com/v1/jobs/{job_id}", headers=HEADERS, timeout=120)
+    poll.raise_for_status()
+    job = poll.json()
     print(job["status"], job.get("progress"))
     if job["status"] in ("CompletedJob", "Error", "NotFound", "BadRequest"):
         break
-    time.sleep(5)
+else:
+    raise SystemExit(f"Job {job_id} still running after 12 hours")
 
+if job["status"] != "CompletedJob":
+    raise SystemExit("Job failed: " + job["status"])
 print(job.get("result"))
 ```
 
@@ -114,12 +120,16 @@ const { job_id: jobId } = (await response.json()) as { job_id: string };
 
 type Job = { status: string; progress?: number; result?: unknown };
 const done = new Set(["CompletedJob", "Error", "NotFound", "BadRequest"]);
-let job: Job;
-do {
-  await new Promise((r) => setTimeout(r, 5000));
-  job = (await (await fetch(`https://api.huntapi.com/v1/jobs/${jobId}`, { headers })).json()) as Job;
+let job: Job | undefined;
+for (let i = 0; i < 4320; i++) { // give up after 12 hours
+  await new Promise((r) => setTimeout(r, 10000));
+  const poll = await fetch(`https://api.huntapi.com/v1/jobs/${jobId}`, { headers });
+  if (!poll.ok) throw new Error(`HTTP ${poll.status}: ${await poll.text()}`);
+  job = (await poll.json()) as Job;
   console.log(job.status, job.progress);
-} while (!done.has(job.status));
+  if (done.has(job.status)) break;
+}
+if (job?.status !== "CompletedJob") throw new Error(`Job ${jobId} not completed: ${job?.status}`);
 
 console.log(job.result);
 ```
@@ -129,6 +139,8 @@ console.log(job.result);
 1. The request returns `{"job_id": "…"}` immediately.
 2. Poll `GET https://api.huntapi.com/v1/jobs/{id}` every few seconds — `status` goes from `Queued` to `Running` (with `progress` 0–100) to a final value: `CompletedJob`, `Error`, `NotFound`, `BadRequest`.
 3. When `status` is `CompletedJob`, read `result` (download link and metadata).
+
+Jobs on very long videos can take up to 12 hours before they time out: the examples poll every 10 seconds and give up after 12 hours.
 
 Prefer push over polling? Pass `webhook_url` and the result is POSTed to your endpoint.
 

@@ -23,12 +23,13 @@ uri.query = URI.encode_www_form('query' => 'https://www.youtube.com/watch?v=Z5YP
 response = call("GET", uri.to_s)
 
 job_id = JSON.parse(response).fetch("job_id")
-job = nil
-loop do
-  sleep 5
+job = {}
+4320.times do # give up after 12 hours
+  sleep 10
   job = JSON.parse(call("GET", "https://api.huntapi.com/v1/jobs/#{job_id}"))
   puts "#{job['status']} #{job['progress']}"
   break if ["CompletedJob", "Error", "NotFound", "BadRequest"].include?(job["status"])
 end
 
 puts JSON.pretty_generate(job["result"] || {})
+abort "Job #{job_id} not completed: #{job['status']}" unless job["status"] == "CompletedJob"

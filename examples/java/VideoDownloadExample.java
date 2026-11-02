@@ -46,14 +46,18 @@ public class VideoDownloadExample {
         HttpResponse<byte[]> response = call("GET", "https://api.huntapi.com/v1/video/download" + (query.isEmpty() ? "" : "?" + query), null);
         String jobId = field(new String(response.body(), StandardCharsets.UTF_8), "job_id");
         Set<String> done = Set.of("CompletedJob", "Error", "NotFound", "BadRequest");
-        String job;
-        while (true) {
-            Thread.sleep(5000);
+        String job = "";
+        String status = "";
+        for (int i = 0; i < 4320 && !done.contains(status); i++) { // give up after 12 hours
+            Thread.sleep(10000);
             job = new String(call("GET", "https://api.huntapi.com/v1/jobs/" + jobId + "", null).body(), StandardCharsets.UTF_8);
-            String status = field(job, "status");
+            status = field(job, "status");
             System.out.println(status);
-            if (done.contains(status)) break;
         }
         System.out.println(job);
+        if (!status.equals("CompletedJob")) {
+            System.err.println("Job " + jobId + " not completed: " + status);
+            System.exit(1);
+        }
     }
 }
