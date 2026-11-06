@@ -27,6 +27,7 @@ Use it for archiving, AI/transcription pipelines, editing workflows or no-code a
 - [Use cases](#use-cases)
 - [Why HuntAPI?](#why-huntapi)
 - [FAQ](#faq)
+- [Official SDKs](#official-sdks)
 - [Related repositories](#related-repositories)
 - [Support](#support)
 
@@ -332,6 +333,22 @@ Private, deleted/unavailable and age-restricted videos return an explanatory err
 ### Which languages are supported?
 
 Any language that can make an HTTP request. This README shows Python and TypeScript; the [`examples/`](examples) folder contains cURL, PHP, C#, Go, Java, Ruby and Node.js.
+
+## Official SDKs
+
+Use HuntAPI from your own language with a typed client:
+
+| SDK | Package | Install |
+| --- | --- | --- |
+| Node.js | [`@huntapi/sdk`](https://www.npmjs.com/package/@huntapi/sdk) | `npm install @huntapi/sdk` |
+| Python | [`huntapi`](https://pypi.org/project/huntapi/) | `pip install huntapi` |
+| Go | [`huntapi-go`](https://pkg.go.dev/github.com/huntapi/huntapi-go) | `go get github.com/huntapi/huntapi-go` |
+| .NET | [`HuntApi`](https://www.nuget.org/packages/HuntApi) | `dotnet add package HuntApi` |
+| Ruby | [`huntapi`](https://rubygems.org/gems/huntapi) | `gem install huntapi` |
+| PHP | [`huntapi/sdk`](https://packagist.org/packages/huntapi/sdk) | `composer require huntapi/sdk` |
+| Java | [`huntapi-java`](https://github.com/huntapi/huntapi-java) | build from source, see its README |
+| CLI | [`@huntapi/cli`](https://www.npmjs.com/package/@huntapi/cli) | `npm install -g @huntapi/cli` |
+| MCP server | [`@huntapi/mcp`](https://www.npmjs.com/package/@huntapi/mcp) | `npx -y @huntapi/mcp` |
 
 ## Related repositories
 
